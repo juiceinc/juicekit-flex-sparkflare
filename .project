@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>juicekit-flex-data</name>
+	<name>juicekit-flex-sparkflare</name>
 	<comment></comment>
 	<projects>
 		<project>juicekit-flex-core</project>
+		<project>juicekit-flex-data</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

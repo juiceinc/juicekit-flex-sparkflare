@@ -1,6 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flexLibProperties includeAllClasses="true" version="3">
-  <includeClasses/>
+  <includeClasses>
+    <classEntry path="org.juicekit.container.PaletteCanvas"/>
+    <classEntry path="org.juicekit.encoder.ColorEncoder"/>
+    <classEntry path="org.juicekit.encoder.Encoder"/>
+    <classEntry path="org.juicekit.encoder.IOperator"/>
+    <classEntry path="org.juicekit.encoder.Operator"/>
+    <classEntry path="org.juicekit.encoder.OperatorList"/>
+    <classEntry path="org.juicekit.encoder.SizeEncoder"/>
+    <classEntry path="org.juicekit.palette.ColorPalette"/>
+    <classEntry path="org.juicekit.palette.IPalette"/>
+    <classEntry path="org.juicekit.palette.Palette"/>
+    <classEntry path="org.juicekit.palette.ShapePalette"/>
+    <classEntry path="org.juicekit.palette.SizePalette"/>
+    <classEntry path="org.juicekit.scale.LinearScale"/>
+    <classEntry path="org.juicekit.scale.QuantitativeScale"/>
+    <classEntry path="org.juicekit.scale.Scale"/>
+    <classEntry path="sparkflare.distortions.MouseDistance"/>
+    <classEntry path="sparkflare.layouts.HorizontalLayout"/>
+    <classEntry path="sparkflare.layouts.TileLayout"/>
+    <classEntry path="sparkflare.layouts.TreemapLayout"/>
+    <classEntry path="sparkflare.layouts.VerticalLayout"/>
+    <classEntry path="sparkflare.layouts.VerticalLineLayout"/>
+    <classEntry path="sparkflare.layouts.VerticalStackLayout"/>
+    <classEntry path="sparkflare.layouts.VerticalStripeLayout"/>
+    <classEntry path="sparkflare.mappers.ColorMapper"/>
+    <classEntry path="sparkflare.mappers.IMapper"/>
+    <classEntry path="sparkflare.mappers.Mapper"/>
+    <classEntry path="sparkflare.mappers.MapperBase"/>
+    <classEntry path="sparkflare.mappers.MapperChain"/>
+    <classEntry path="sparkflare.mappers.MapperSwitch"/>
+    <classEntry path="sparkflare.mappers.NumberMapper"/>
+    <classEntry path="sparkflare.mappers.PropertyMapper"/>
+    <classEntry path="sparkflare.vis.IPalette"/>
+    <classEntry path="sparkflare.vis.IVisualization"/>
+    <classEntry path="sparkflare.vis.Visualization"/>
+    <classEntry path="sparkflare.vis.VisualizationDataGroup"/>
+    <classEntry path="sparkflare.vis.VisualizationGroup"/>
+    <classEntry path="sparkflare.mappers.PlaceholderMapper"/>
+  </includeClasses>
   <includeResources/>
   <namespaceManifests/>
 </flexLibProperties>

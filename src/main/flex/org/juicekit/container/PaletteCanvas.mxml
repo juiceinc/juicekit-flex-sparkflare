@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+~ Copyright 2007-2010 Juice, Inc.
+~
+~ Licensed under the Apache License, Version 2.0 (the "License");
+~ you may not use this file except in compliance with the License.
+~ You may obtain a copy of the License at
+~
+~     http://www.apache.org/licenses/LICENSE-2.0
+~
+~ Unless required by applicable law or agreed to in writing, software
+~ distributed under the License is distributed on an "AS IS" BASIS,
+~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~ See the License for the specific language governing permissions and
+~ limitations under the License.
+-->
+
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init()"
+           width="180" height="16" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    
+    
+    <!--
+    
+    A canvas filled with color blocks representing colors of a ColorPalette.
+    
+    -->
+    
+    <mx:Script>
+    <![CDATA[
+        import org.juicekit.palette.ColorPalette;
+        import org.juicekit.util.Colors;
+        
+        /**
+         * A reference to the created ColorPalette
+         */
+        [Bindable]
+        public function get colorPalette():ColorPalette {
+            return _colorPalette;
+        }
+
+        
+        public function set colorPalette(cp:ColorPalette):void {
+            _colorPalette = cp;
+            invalidateDisplayList();
+        }
+        
+        
+        
+        private var _colorPalette:ColorPalette = ColorPalette.fromString('spectral');
+        
+        /**
+         * The palette name to display. May be a String or a
+         * ColorPalette Object.
+         *
+         * @see ColorPalette.fromString
+         *
+         */
+        [Bindable]
+        public function set palette(v:*):void {
+            _rawpalette = v;
+            _colorPalette = ColorPalette.fromString(v);
+            if (!(v is ColorPalette)) {
+                _colorPalette.length = _paletteLength;
+            }
+            _colorPalette.addEventListener('colorsChanged', function(e:Event):void {
+                invalidateDisplayList();
+            });
+            invalidateDisplayList();
+        }
+        
+        public function get palette():* {
+            return _rawpalette;
+        }
+        
+        private var _rawpalette:*;
+        
+        
+        /**
+         * Set the length of the color palette.
+         *
+         * @default 64
+         */
+        public function set paletteLength(v:uint):void {
+            _paletteLength = v;
+            colorPalette.length = _paletteLength;
+            invalidateProperties();
+        }
+        
+        private var _paletteLength:uint = 64;
+        
+        
+        /**
+         * Direction in which to draw the palette block. Can be
+         * one of "vertical" or "horizontal".
+         */
+        [Inspectable(type=String, enumeration='horizontal,vertical')]
+        public function set direction(v:String):void {
+            _direction = v;
+            invalidateProperties();
+        }
+        
+        public function get direction():String {
+            return _direction;
+        }
+        
+        private var _direction:String = 'horizontal';
+        
+        
+        public function init():void {
+            colorPalette.addEventListener('colorsChanged', function(e:Event):void {
+                invalidateDisplayList()
+            });
+        }
+        
+        /**
+         * An optional color to use for labels in the
+         * container.
+         */
+        [Bindable]
+        public var fgColor:uint = 0xffffff;
+        
+        
+        /**
+         * @inheritDoc
+         */
+        override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+            super.updateDisplayList(unscaledWidth, unscaledHeight);
+            
+            fgColor = Colors.whiteOrBlack(colorPalette.getColorByIndexFromAC(0));
+            const dir:String = direction;
+            const len:int = colorPalette.length;
+            const blockW:Number = unscaledWidth / len;
+            const blockH:Number = unscaledHeight / len;
+            
+            var idx:int = 0;
+            for each (var c:uint in colorPalette.values) {
+                graphics.beginFill(0xffffff & c, 1);
+                if (dir == 'vertical') {
+                    graphics.drawRect(0, idx * blockH, unscaledWidth, blockH);
+                } else {
+                    graphics.drawRect(idx * blockW, 0, blockW, unscaledHeight);
+                }
+                idx += 1;
+            }
+        }
+    ]]>
+    </mx:Script>
+    
+</mx:Canvas>
