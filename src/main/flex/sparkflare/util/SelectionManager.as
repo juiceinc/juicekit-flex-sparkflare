@@ -98,7 +98,8 @@ package sparkflare.util
 		/**
 		 * Sets up initial state of selectedItems based on selection strategy
 		 */
-		public function selectionInit():void {
+		protected function selectionInit():void 
+		{
 			if (selectionMode == SelectionManager.SELECT_MANY_DEFAULT_SELECTED &&
 				selectedItems.length == 0 && 
 				dataGroup && 
@@ -110,6 +111,12 @@ package sparkflare.util
 					selectedItems.addItem(item);		
 				}
 			}
+		}
+		
+		public function resetSelection():void 
+		{
+			selectedItems.removeAll();
+			selectionInit();
 		}
 		
 		
