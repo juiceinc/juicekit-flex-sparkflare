@@ -1,8 +1,11 @@
 package sparkflare.util
 {
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 	
+	import mx.binding.utils.BindingUtils;
 	import mx.collections.ArrayCollection;
+	import mx.events.CollectionEvent;
 	
 	import spark.components.DataGroup;
 	import spark.components.supportClasses.ItemRenderer;
@@ -19,6 +22,12 @@ package sparkflare.util
 	public class SelectionManager
 	{
 		
+		//-----------------------------
+		//
+		// Constants
+		//
+		//-----------------------------
+		
 		/** Select only one element at a time */
 		public static const SELECT_ONE:String = 'selectOne';
 		/** Select multiple elements at a time starting with zero elements selected */
@@ -27,7 +36,21 @@ package sparkflare.util
 		public static const SELECT_MANY_DEFAULT_SELECTED:String = 'selectManyDefaultSelected';
 		
 		
-		private var _dataGroup:DataGroup;
+		//-----------------------------
+		//
+		// Properties
+		//
+		//-----------------------------
+		
+		/**
+		 * Has the user performed any selection yet.
+		 */
+		protected var userSelectionReceived:Boolean = false;
+		
+		//-----------------------------
+		// dataGroup
+		//-----------------------------
+		[Bindable] public var _dataGroup:DataGroup;
 		
 		public function set dataGroup(v:DataGroup):void 
 		{
@@ -46,19 +69,27 @@ package sparkflare.util
 					rend = _dataGroup.getElementAt(i) as ItemRenderer;
 					rend.removeEventListener(MouseEvent.CLICK, itemClicked);
 				}
+			
 			}
 			
 			_dataGroup = v;
-			
-			// Add event handlers
-			_dataGroup.addEventListener(RendererExistenceEvent.RENDERER_ADD, addClickHandler);
-			_dataGroup.addEventListener(RendererExistenceEvent.RENDERER_REMOVE, removeClickHandler);
-			
-			len = _dataGroup.numElements;
-			for (i=0; i<len; i++)
+
+			// Add handlers to new group
+			if (_dataGroup)
 			{
-				rend = _dataGroup.getElementAt(i) as ItemRenderer;
-				rend.addEventListener(MouseEvent.CLICK, itemClicked);
+				// TODO: this doesn't seem to catch all data provider changes
+				BindingUtils.bindSetter(dataProviderSetterHandler, _dataGroup, 'dataProvider', false, true);
+				
+				// Add event handlers
+				_dataGroup.addEventListener(RendererExistenceEvent.RENDERER_ADD, addClickHandler);
+				_dataGroup.addEventListener(RendererExistenceEvent.RENDERER_REMOVE, removeClickHandler);
+				
+				len = _dataGroup.numElements;
+				for (i=0; i<len; i++)
+				{
+					rend = _dataGroup.getElementAt(i) as ItemRenderer;
+					rend.addEventListener(MouseEvent.CLICK, itemClicked);
+				}
 			}
 			
 			selectionInit();
@@ -71,7 +102,13 @@ package sparkflare.util
 		}
 		
 		
+		//-----------------------------
+		// selectionMode
+		//-----------------------------
+		
 		private var _selectionMode:String = SelectionManager.SELECT_ONE;
+
+		[Inspectable(name="selectionMode",type="String",category="General",enumeration="selectOne,selectMany,selectManyDefaultSelected",default="selectOne")]
 		public function set selectionMode(v:String):void 
 		{
 			if (_selectionMode != v) 
@@ -80,30 +117,32 @@ package sparkflare.util
 				selectionInit();
 			}
 		}
+		
 		public function get selectionMode():String 
 		{
 			return _selectionMode;
 		}
 		
 		
-		/** The set of selected items */
+		/** 
+		 * The set of selected items 
+		 */
 		[Bindable] public var selectedItems:ArrayCollection = new ArrayCollection();
 		
 		
 		//--------------------------------
 		// Methods
 		//--------------------------------
-		
-		
+
 		/**
 		 * Sets up initial state of selectedItems based on selection strategy
 		 */
-		protected function selectionInit():void 
+		protected function selectionInit(e:Event=null):void 
 		{
 			if (selectionMode == SelectionManager.SELECT_MANY_DEFAULT_SELECTED &&
-				selectedItems.length == 0 && 
+				!userSelectionReceived && 
 				dataGroup && 
-				dataGroup.dataProvider )
+				dataGroup.dataProvider)
 			{
 				selectedItems.removeAll();
 				for each (var item:Object in dataGroup.dataProvider)
@@ -111,11 +150,25 @@ package sparkflare.util
 					selectedItems.addItem(item);		
 				}
 			}
+			else if (selectionMode == SelectionManager.SELECT_MANY &&
+				!userSelectionReceived && 
+				dataGroup && 
+				dataGroup.dataProvider)
+			{
+				selectedItems.removeAll();
+			}
+			else if (selectionMode == SelectionManager.SELECT_ONE &&
+				!userSelectionReceived && 
+				dataGroup && 
+				dataGroup.dataProvider)
+			{
+				selectedItems.removeAll();
+			}
 		}
 		
 		public function resetSelection():void 
 		{
-			selectedItems.removeAll();
+			userSelectionReceived = false;
 			selectionInit();
 		}
 		
@@ -123,6 +176,17 @@ package sparkflare.util
 		//--------------------------------
 		// Event handling
 		//--------------------------------
+		
+		
+		protected function dataProviderSetterHandler(o:Object=null):void 
+		{
+			trace('dataProvider setter');
+			if (o is ArrayCollection)
+			{
+				(o as ArrayCollection).addEventListener(CollectionEvent.COLLECTION_CHANGE, selectionInit, false, 0, true);
+			}
+			selectionInit();
+		}
 		
 		
 		/**
@@ -168,6 +232,7 @@ package sparkflare.util
 					selectedItems.addItem(data);
 				}
 			}
+			userSelectionReceived = true;
 		}
 		
 		/**
@@ -192,12 +257,11 @@ package sparkflare.util
 		// Constructor
 		//--------------------------------
 		
-		public function SelectionManager(dataGroup:DataGroup=null, selectionStrategy:String='selectOne')
+		public function SelectionManager(dataGroup:DataGroup=null, selectionMode:String='selectOne')
 		{
 			if (dataGroup)
 				this.dataGroup = dataGroup;
-			this.selectionMode = selectionStrategy;
-			selectionInit();
+			this.selectionMode = selectionMode;
 		}
 	}
 }
