@@ -4,6 +4,8 @@
     <classEntry path="sparkflare.vis.VisualizationGroup"/>
     <classEntry path="sparkflare.mappers.SelectionMapper"/>
     <classEntry path="sparkflare.util.SelectionManager"/>
+    <classEntry path="sparkflare.util.ISelectionManager"/>
+    <classEntry path="sparkflare.util.ConditionManager"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -10,6 +10,8 @@ package sparkflare.mappers
 	import org.juicekit.util.Property;
 	
 	import sparkflare.mappers.MapperBase;
+	import sparkflare.util.ISelectionManager;
+	import sparkflare.util.SelectionManager;
 	
 	
 	
@@ -20,23 +22,20 @@ package sparkflare.mappers
 	[Bindable]
 	public class SelectionMapper extends MapperBase
 	{
-		/** Storage for selectedItems property */
-		protected var _selectedItems:ArrayCollection = new ArrayCollection();
+
+
+		private var _selectionManager:ISelectionManager;
 		
-		/**
-		 * A collection to watch 
-		 */
-		public function set selectedItems(v:ArrayCollection):void {
-			_selectedItems.removeEventListener(CollectionEvent.COLLECTION_CHANGE, updateMapper);
-			_selectedItems = v;
-			_selectedItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, updateMapper);
+		public function set selectionManager(v:ISelectionManager):void {
+			_selectionManager = v;
+			_selectionManager.addEventListener('selectionChanged', updateMapper);
 		}
 		
-		public function get selectedItems():ArrayCollection {
-			return _selectedItems;
+		public function get selectionManager():ISelectionManager {
+			return _selectionManager;
 		}
 		
-		
+
 		/**
 		 * The property name to use for the selected boolean
 		 * 
@@ -53,9 +52,7 @@ package sparkflare.mappers
 					var selectedProp:Property = new Property(selectedField);
 					
 					for each (var row:Object in items) {
-						if (row.hasOwnProperty('data')) 
-							// TODO: possibly maintain a dictionary to use for lookups
-							selectedProp.setValue(row, selectedItems.contains(row.data)); 
+						selectedProp.setValue(row, selectionManager.isSelected(row.data));
 					}
 					
 				}					

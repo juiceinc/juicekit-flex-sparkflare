@@ -1,11 +1,18 @@
 package sparkflare.util
 {
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.MouseEvent;
+	import flash.utils.Dictionary;
+	import flash.utils.setTimeout;
 	
 	import mx.binding.utils.BindingUtils;
 	import mx.collections.ArrayCollection;
+	import mx.collections.IList;
+	import mx.controls.Alert;
 	import mx.events.CollectionEvent;
+	
+	import org.juicekit.util.Property;
 	
 	import spark.components.DataGroup;
 	import spark.components.supportClasses.ItemRenderer;
@@ -19,7 +26,7 @@ package sparkflare.util
 	 * 
 	 * @see sparkflare.mappers.SelectionMapper
 	 */
-	public class SelectionManager
+	public class SelectionManager extends EventDispatcher implements ISelectionManager
 	{
 		
 		//-----------------------------
@@ -47,11 +54,14 @@ package sparkflare.util
 		 */
 		protected var userSelectionReceived:Boolean = false;
 		
+		
 		//-----------------------------
 		// dataGroup
 		//-----------------------------
+		
 		[Bindable] public var _dataGroup:DataGroup;
 		
+
 		public function set dataGroup(v:DataGroup):void 
 		{
 			var len:int;
@@ -123,49 +133,118 @@ package sparkflare.util
 			return _selectionMode;
 		}
 		
+
+		/**
+		 * A property to use for matching. 
+		 */
+		private var _matchField:String;
+		
+		public function get matchField():String
+		{
+			return _matchField;
+		}
+		
+		public function set matchField(value:String):void
+		{
+			_matchField = value;
+			if (matchField) 
+				matchProp = new Property(matchField);
+			else
+				matchProp = null;
+			selectionInit();
+		}
+		
+		/** A property that matches matchField */
+		protected var matchProp:Property;
+		
 		
 		/** 
-		 * The set of selected items 
+		 * A lookup containing selected items. 
 		 */
-		[Bindable] public var selectedItems:ArrayCollection = new ArrayCollection();
+		public var selectedLookup:Dictionary = new Dictionary();
+		
+		
+
+		//--------------------------------
+		// Convenience methods
+		//--------------------------------		
+		
+		protected function getValue(obj:Object):Object
+		{
+			return matchProp == null ? obj : matchProp.getValue(obj); 
+		}		
+		
+		protected function areAllSelected(dataProvider:IList, lookup:Dictionary):Boolean {
+			if (dataProvider)
+			{
+				for each (var item:Object in dataProvider)
+				{
+					if (lookup[getValue(item)] === undefined)
+						return false;
+				}				
+			}
+			return true;
+		}
+		
+		protected function lookupSelectOnly(data:Object):void {
+			selectedLookup = new Dictionary();
+			selectedLookup[getValue(data)] = 1;
+		}
+		
+		protected function lookupSelect(data:Object):void {
+			selectedLookup[getValue(data)] = 1;
+		}
+		
+		protected function lookupDeselect(data:Object):void {
+			delete selectedLookup[getValue(data)];
+		}
+		
+		protected function lookupSelectNone():void {
+			selectedLookup = new Dictionary();
+		}
+				
 		
 		
 		//--------------------------------
 		// Methods
 		//--------------------------------
-
+		
+		
 		/**
-		 * Sets up initial state of selectedItems based on selection strategy
+		 * Sets up initial state of selectedLookup based on selection strategy
 		 */
-		protected function selectionInit(e:Event=null):void 
+		protected function selectionInit(e:Event=null, dataProvider:IList=null):void 
 		{
-			if (selectionMode == SelectionManager.SELECT_MANY_DEFAULT_SELECTED &&
-				!userSelectionReceived && 
-				dataGroup && 
-				dataGroup.dataProvider)
+			if (dataProvider == null && dataGroup && dataGroup.dataProvider) 
+				dataProvider = dataGroup.dataProvider;
+			
+			if (!userSelectionReceived && dataProvider)
 			{
-				selectedItems.removeAll();
-				for each (var item:Object in dataGroup.dataProvider)
+				if (selectionMode == SelectionManager.SELECT_MANY_DEFAULT_SELECTED)
 				{
-					selectedItems.addItem(item);		
+					lookupSelectNone();
+					trace(dataProvider.length.toString());
+					for each (var item:Object in dataProvider)
+					{
+						lookupSelect(item);
+					}
 				}
-			}
-			else if (selectionMode == SelectionManager.SELECT_MANY &&
-				!userSelectionReceived && 
-				dataGroup && 
-				dataGroup.dataProvider)
-			{
-				selectedItems.removeAll();
-			}
-			else if (selectionMode == SelectionManager.SELECT_ONE &&
-				!userSelectionReceived && 
-				dataGroup && 
-				dataGroup.dataProvider)
-			{
-				selectedItems.removeAll();
+				else if (selectionMode == SelectionManager.SELECT_MANY)
+				{
+					lookupSelectNone();
+				}
+				else if (selectionMode == SelectionManager.SELECT_ONE)
+				{
+					lookupSelectNone();
+				}
+				dispatchEvent(new Event('selectionChanged'));
 			}
 		}
 		
+		public function isSelected(obj:Object):Boolean {
+			return !(selectedLookup[getValue(obj)] === undefined)
+		}
+
 		public function resetSelection():void 
 		{
 			userSelectionReceived = false;
@@ -176,19 +255,18 @@ package sparkflare.util
 		//--------------------------------
 		// Event handling
 		//--------------------------------
-		
-		
+				
 		protected function dataProviderSetterHandler(o:Object=null):void 
 		{
-			trace('dataProvider setter');
-			if (o is ArrayCollection)
+			if (o is IList)
 			{
-				(o as ArrayCollection).addEventListener(CollectionEvent.COLLECTION_CHANGE, selectionInit, false, 0, true);
+				(o as IList).addEventListener(CollectionEvent.COLLECTION_CHANGE, selectionInit, false, 0, true);
+				
+				// TODO: This doesn't seem to work in all cases
+				selectionInit(null, o as IList);
 			}
-			selectionInit();
 		}
-		
-		
+
 		/**
 		 * When an item renderer from dataGroup is clicked, perform 
 		 * a selection strategy to change selectedItems.
@@ -199,41 +277,41 @@ package sparkflare.util
 			// Select one thing at a time
 			if (selectionMode == SelectionManager.SELECT_ONE)
 			{
-				selectedItems.removeAll();
-				selectedItems.addItem(data);
+				lookupSelectOnly(data);
 			}
 				
-				// Select multiple items but when all items are selected
-				// clear the selected items
+			// Select multiple items but when all items are selected
+			// clear the selected items
 			else if (selectionMode == SelectionManager.SELECT_MANY)
 			{
-				if (selectedItems.contains(data)) {
-					selectedItems.removeItemAt(selectedItems.getItemIndex(data));
-				} else {
-					selectedItems.addItem(data);
-				}
-				if (selectedItems.length >= dataGroup.dataProvider.length) {
-					selectedItems.removeAll();
-				}
+				if (selectedLookup[getValue(data)] === undefined) 
+					lookupSelect(data);
+				else
+					lookupDeselect(data);
+
+				if (areAllSelected(dataGroup.dataProvider, selectedLookup))
+					lookupSelectNone();
 			}
 				
-				// Start with everything selected (@see selectionInit) then when the 
-				// first thing is selected, set it to the only thing selected and build
-				// up from there.
+			// Start with everything selected (@see selectionInit) then when the 
+			// first thing is selected, set it to the only thing selected and build
+			// up from there.
 			else if (selectionMode == SelectionManager.SELECT_MANY_DEFAULT_SELECTED)
 			{
-				if (selectedItems.length >= dataGroup.dataProvider.length) {
-					selectedItems.removeAll();
-					selectedItems.addItem(data);
+				if (areAllSelected(dataGroup.dataProvider, selectedLookup))
+				{
+					lookupSelectOnly(data);
 				}
-				else if (selectedItems.contains(data)) {
-					selectedItems.removeItemAt(selectedItems.getItemIndex(data));
+				else if (selectedLookup[getValue(data)] === undefined) {
+					lookupSelect(data);
 				} else {
-					selectedItems.addItem(data);
+					lookupDeselect(data);
 				}
 			}
 			userSelectionReceived = true;
+			dispatchEvent(new Event('selectionChanged'));
 		}
+		
 		
 		/**
 		 * Attach a click handler when item renderers are added 
@@ -242,6 +320,7 @@ package sparkflare.util
 			var rend:ItemRenderer = e.renderer as ItemRenderer;
 			rend.addEventListener(MouseEvent.CLICK, itemClicked);
 		}
+		
 		
 		/**
 		 * Remove a click handler when item renderers are removed 
@@ -257,11 +336,12 @@ package sparkflare.util
 		// Constructor
 		//--------------------------------
 		
-		public function SelectionManager(dataGroup:DataGroup=null, selectionMode:String='selectOne')
+		public function SelectionManager(dataGroup:DataGroup=null, selectionMode:String='selectOne', matchField:String=null)
 		{
 			if (dataGroup)
 				this.dataGroup = dataGroup;
 			this.selectionMode = selectionMode;
+			this.matchField = matchField;
 		}
 	}
 }
