@@ -186,30 +186,6 @@ package sparkflare.util
 			return propToUse == null ? obj : propToUse.getValue(obj); 
 		}		
 		
-		protected function areNoneSelected(dataProvider:IList, lookup:Dictionary):Boolean {
-			if (dataProvider)
-			{
-				for each (var item:Object in dataProvider)
-				{
-					if (lookup[getValue(item)] !== undefined)
-						return false;
-				}				
-			}
-			return true;
-		}
-
-		protected function areAllSelected(dataProvider:IList, lookup:Dictionary):Boolean {
-			if (dataProvider)
-			{
-				for each (var item:Object in dataProvider)
-				{
-					if (lookup[getValue(item)] === undefined)
-						return false;
-				}				
-			}
-			return true;
-		}
-		
 		protected function lookupSelectOnly(data:Object):void {
 			selectedLookup = new Dictionary();
 			selectedLookup[getValue(data)] = 1;
@@ -240,6 +216,39 @@ package sparkflare.util
 		//--------------------------------
 		// Methods
 		//--------------------------------
+		
+		/**
+		 * Are none of the items in the dataGroup in selectedLookup?
+		 */
+		[Bindable(name="selectionChanged")]
+		public function areNoneSelected():Boolean {
+			if (dataGroup && dataGroup.dataProvider)
+			{
+				for each (var item:Object in dataGroup.dataProvider)
+				{
+					if (selectedLookup[getValue(item)] !== undefined)
+						return false;
+				}				
+			}
+			return true;
+		}
+		
+		
+		/**
+		 * Are all items in the dataGroup in selectedLookup?
+		 */
+		[Bindable(name="selectionChanged")]
+		public function areAllSelected():Boolean {
+			if (dataGroup && dataGroup.dataProvider)
+			{
+				for each (var item:Object in dataGroup.dataProvider)
+				{
+					if (selectedLookup[getValue(item)] === undefined)
+						return false;
+				}				
+			}
+			return true;
+		}
 		
 		
 		/**
@@ -320,7 +329,7 @@ package sparkflare.util
 				else
 					lookupDeselect(data);
 
-				if (areAllSelected(dataGroup.dataProvider, selectedLookup))
+				if (areAllSelected())
 					lookupSelectNone();
 			}
 				
@@ -329,7 +338,7 @@ package sparkflare.util
 			// up from there.
 			else if (selectionMode == SelectionManager.SELECT_MANY_DEFAULT_SELECTED)
 			{
-				if (areAllSelected(dataGroup.dataProvider, selectedLookup))
+				if (areAllSelected())
 				{
 					lookupSelectOnly(data);
 				}
@@ -337,7 +346,7 @@ package sparkflare.util
 					lookupSelect(data);
 				} else {
 					lookupDeselect(data);
-					if (areNoneSelected(dataGroup.dataProvider, selectedLookup))
+					if (areNoneSelected())
 						lookupSelectAll(dataGroup.dataProvider);
 				}
 			}
