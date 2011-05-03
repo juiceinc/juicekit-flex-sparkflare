@@ -15,6 +15,7 @@ package sparkflare.util
 	import org.juicekit.util.Property;
 	
 	import spark.components.DataGroup;
+	import spark.components.IItemRenderer;
 	import spark.components.supportClasses.ItemRenderer;
 	import spark.events.RendererExistenceEvent;
 	
@@ -66,7 +67,7 @@ package sparkflare.util
 		{
 			var len:int;
 			var i:int;
-			var rend:ItemRenderer;
+			var rend:IItemRenderer;
 			
 			// Remove event handlers from old group
 			if (_dataGroup)
@@ -76,8 +77,9 @@ package sparkflare.util
 				len = _dataGroup.numElements;
 				for (i=0; i<len; i++)
 				{
-					rend = _dataGroup.getElementAt(i) as ItemRenderer;
-					rend.removeEventListener(MouseEvent.CLICK, itemClicked);
+					rend = _dataGroup.getElementAt(i) as IItemRenderer;
+					if (rend)
+						rend.removeEventListener(MouseEvent.CLICK, itemClicked);
 				}
 			
 			}
@@ -97,8 +99,9 @@ package sparkflare.util
 				len = _dataGroup.numElements;
 				for (i=0; i<len; i++)
 				{
-					rend = _dataGroup.getElementAt(i) as ItemRenderer;
-					rend.addEventListener(MouseEvent.CLICK, itemClicked);
+					rend = _dataGroup.getElementAt(i) as IItemRenderer;
+					if (rend)
+						rend.addEventListener(MouseEvent.CLICK, itemClicked);
 				}
 			}
 			
@@ -174,6 +177,18 @@ package sparkflare.util
 			return matchProp == null ? obj : matchProp.getValue(obj); 
 		}		
 		
+		protected function areNoneSelected(dataProvider:IList, lookup:Dictionary):Boolean {
+			if (dataProvider)
+			{
+				for each (var item:Object in dataProvider)
+				{
+					if (lookup[getValue(item)] !== undefined)
+						return false;
+				}				
+			}
+			return true;
+		}
+
 		protected function areAllSelected(dataProvider:IList, lookup:Dictionary):Boolean {
 			if (dataProvider)
 			{
@@ -202,6 +217,14 @@ package sparkflare.util
 		protected function lookupSelectNone():void {
 			selectedLookup = new Dictionary();
 		}
+		
+		protected function lookupSelectAll(dataProvider:IList):void {
+			lookupSelectNone();
+			for each (var item:Object in dataProvider)
+			{
+				lookupSelect(item);
+			}
+		}
 				
 		
 		
@@ -222,12 +245,7 @@ package sparkflare.util
 			{
 				if (selectionMode == SelectionManager.SELECT_MANY_DEFAULT_SELECTED)
 				{
-					lookupSelectNone();
-					trace(dataProvider.length.toString());
-					for each (var item:Object in dataProvider)
-					{
-						lookupSelect(item);
-					}
+					lookupSelectAll(dataProvider);
 				}
 				else if (selectionMode == SelectionManager.SELECT_MANY)
 				{
@@ -306,10 +324,13 @@ package sparkflare.util
 					lookupSelect(data);
 				} else {
 					lookupDeselect(data);
+					if (areNoneSelected(dataGroup.dataProvider, selectedLookup))
+						lookupSelectAll(dataGroup.dataProvider);
 				}
 			}
 			userSelectionReceived = true;
 			dispatchEvent(new Event('selectionChanged'));
+			dispatchEvent(new Event('itemClicked'));
 		}
 		
 		
