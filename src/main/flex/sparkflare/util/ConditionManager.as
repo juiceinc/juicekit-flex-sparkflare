@@ -15,7 +15,7 @@ package sparkflare.util
 			dispatchEvent(new Event('selectionChanged'));
 		}
 		
-		public function isSelected(obj:Object):Boolean {
+		public function isSelected(obj:Object, overrideField:String=null):Boolean {
 			return _expression(obj);
 		}
 		

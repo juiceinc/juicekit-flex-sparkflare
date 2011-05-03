@@ -172,9 +172,18 @@ package sparkflare.util
 		// Convenience methods
 		//--------------------------------		
 		
-		protected function getValue(obj:Object):Object
+		/**
+		 * Get value from an object. If an overrideField
+		 * is provided use the field as a property name to get
+		 * the value.
+		 */
+		protected function getValue(obj:Object, overrideField:String=null):Object
 		{
-			return matchProp == null ? obj : matchProp.getValue(obj); 
+			var propToUse:Property = matchProp;
+			if (overrideField != null) {
+				propToUse = Property.$(overrideField);
+			}
+			return propToUse == null ? obj : propToUse.getValue(obj); 
 		}		
 		
 		protected function areNoneSelected(dataProvider:IList, lookup:Dictionary):Boolean {
@@ -259,8 +268,12 @@ package sparkflare.util
 			}
 		}
 		
-		public function isSelected(obj:Object):Boolean {
-			return !(selectedLookup[getValue(obj)] === undefined)
+		/**
+		 * Determine if the item is found in selectedLookup based on the
+		 * value found in matchField.  overrideField is used if provided.
+		 */
+		public function isSelected(obj:Object, overrideField:String=null):Boolean {
+			return !(selectedLookup[getValue(obj, overrideField)] === undefined)
 		}
 
 		public function resetSelection():void 

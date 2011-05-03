@@ -4,7 +4,7 @@ package sparkflare.util
 
 	public interface ISelectionManager extends IEventDispatcher
 	{
-		function isSelected(obj:Object):Boolean 
+		function isSelected(obj:Object, overrideField:String=null):Boolean 
 		
 	}
 }
