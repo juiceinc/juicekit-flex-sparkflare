@@ -124,6 +124,22 @@ package sparkflare.mappers
 		}
 		
 		
+		/**
+		 * Set the mapper's palette is2D property.
+		 */
+		public function set targetIs2D(v:Object):void {
+			if (palette['is2D'] != Boolean(v)) {
+				palette['is2D'] = Boolean(v);
+				updateMapper();
+			}
+		}
+		
+		public function get targetIs2D():Object {
+			return palette['is2D'];
+		}
+		
+		
+		
 		private var _binCount:int = -1;
 		/**
 		 * Set the encoder's palette length
