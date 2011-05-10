@@ -53,6 +53,20 @@ package org.juicekit.palette
   [Bindable]
   public class Palette extends EventDispatcher implements IMXMLObject, IPalette
   {
+	  protected var _binCount:int = -1;
+	  
+	  public function set binCount(v:int):void {
+		  if (v == 0) v = -1;
+		  if (v != _binCount) {
+			  _binCount = v;
+			  updatePalette();
+		  }
+	  }
+	  
+	  public function get binCount():int {
+		  return _binCount;
+	  }
+	  
     
     /** Array of palette values. */
     protected var _values:Array;
@@ -87,6 +101,19 @@ package org.juicekit.palette
     protected function updatePalette():void {
       dispatchEvent(new Event('updatePalette'));  
     }
+	
+	/**
+	 * Interpolate a fraction into bins
+	 */
+	protected function binInterp(f:Number):Number {
+		const cnt:int = binCount;
+		f = Math.floor(f*cnt);
+		if (f >= cnt)
+			f = cnt - 1.0;
+		return f / (cnt - 1.0)			
+	}
+	
+	
     
     /**
      * Retrieves the palette value corresponding to the input interpolation
@@ -97,6 +124,8 @@ package org.juicekit.palette
     [Bindable(event="updatePalette")]
     public function getValue(f:Number):Object
     {
+      if (binCount != -1) 
+		f = binInterp(f);
       if (_values == null || _values.length == 0)
         return 0;
       return _values[uint(Math.round(f * (_values.length - 1)))];

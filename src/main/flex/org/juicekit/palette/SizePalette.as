@@ -45,16 +45,8 @@ package org.juicekit.palette
 	private var _maxSize:Number = 6;
     private var _range:Number = 6;
     private var _is2D:Boolean = false;
-	private var _binCount:int = -1;
-	
-	public function set binCount(v:int):void {
-		if (v != _binCount) {
-			_binCount = v;
-			updatePalette();
-		}
-	}
-    
-    /** The minimum scale factor in this size palette. */
+
+	/** The minimum scale factor in this size palette. */
     public function get min():Number {
       return _minSize;
     }
@@ -109,33 +101,49 @@ package org.juicekit.palette
       return getSize(f);
     }
 	
-	private function binInterp(f:Number):Number {
-		f = Math.floor(f*_binCount);
-		if (f >= _binCount)
-			f = _binCount - 1.0;
-		return f / (_binCount - 1.0)			
+	/**
+	 * @inheritDocs
+	 */
+	override protected function binInterp(f:Number):Number {
+		const cnt:int = binCount;
+		if (_is2D)
+		{			
+			f = Math.floor(f*f*cnt);
+			if (f >= cnt)
+				f = cnt - 1.0;
+			return Math.sqrt(f / (cnt - 1.0));			
+		}
+		else 
+		{
+			f = Math.floor(f*cnt);
+			if (f >= cnt)
+				f = cnt - 1.0;
+			return f / (cnt - 1.0)			
+		}
 	}
 	
     
     /**
      * Retrieves the size value corresponding to the input interpolation
      * fraction. If the <code>is2D</code> flag is true, the square root
-     * of the size value is returned.
+	 * of the input value is taken.
+	 * 
      * @param f an interpolation fraction
      * @return the size value corresponding to the input fraction
      */
     [Bindable(event="updatePalette")]
     public function getSize(f:Number):Number
     {
+	  f = _is2D ? Math.sqrt(f) : f;
+	  if (binCount != -1) 
+		  f = binInterp(f);
       var s:Number;
       if (_values == null) {
-		  if (_binCount != -1) 
-			  f = binInterp(f);
 		  s = _minSize + f * _range;
       } else {
         s = _values[uint(Math.round(f * (_values.length - 1)))];
       }
-      return _is2D ? Math.sqrt(s) : s;
+	  return s;
     }
     
   } // end of class SizePalette

@@ -309,11 +309,13 @@ package org.juicekit.palette {
      * @param v an interpolation fraction
      * @return the color corresponding to the input fraction
      */
-    public function getColor(v:Number):uint
+    public function getColor(f:Number):uint
     {
+      if (binCount != -1) 
+		f = binInterp(f);
       if (_values == null || _values.length == 0)
         return 0;
-      return _values[uint(Math.round(v * (_values.length - 1)))];
+      return _values[uint(Math.round(f * (_values.length - 1)))];
     }
     
     /**

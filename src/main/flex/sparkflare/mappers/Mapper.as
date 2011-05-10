@@ -128,14 +128,20 @@ package sparkflare.mappers
 		 * Set the mapper's palette is2D property.
 		 */
 		public function set targetIs2D(v:Object):void {
-			if (palette['is2D'] != Boolean(v)) {
-				palette['is2D'] = Boolean(v);
-				updateMapper();
+			if ((palette as Object).hasOwnProperty('is2D'))
+			{
+				if (palette['is2D'] != Boolean(v)) {
+					palette['is2D'] = Boolean(v);
+					updateMapper();
+				}
 			}
 		}
 		
 		public function get targetIs2D():Object {
-			return palette['is2D'];
+			if ((palette as Object).hasOwnProperty('is2D'))
+				return palette['is2D'];
+			else 
+				return false;
 		}
 		
 		
@@ -144,15 +150,17 @@ package sparkflare.mappers
 		/**
 		 * Set the encoder's palette length
 		 */
-		public function set binCount(v:uint):void {
+		public function set binCount(v:int):void {
+			if (v == 0) v = -1;
 			if (palette && v != _binCount) {
-				(palette as SizePalette).binCount = v;
+				_binCount = v;
+				palette['binCount'] = v;
 				updateMapper();
 			}
 		}
 		
-		public function get binCount():uint {
-			return (palette as SizePalette).length;
+		public function get binCount():int {
+			return _binCount;
 		}
 		
 		

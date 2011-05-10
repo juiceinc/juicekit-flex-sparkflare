@@ -38,5 +38,5 @@ package sparkflare.mappers
 			return palette.values;
 		}
 		
-	} // end of class Encoder
+	} 
 }
