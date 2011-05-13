@@ -32,7 +32,7 @@ package sparkflare.layouts
 		
 		
 		/** @inheritDoc */
-		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void 
+		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void 
 		{
 			var row:Object;
 			var _t:Transitioner;
@@ -40,6 +40,8 @@ package sparkflare.layouts
 			if (enabled) 
 			{
 				_t = (t != null ? t : Transitioner.DEFAULT);
+				var restoreImmediate:Boolean = _t.immediate;
+				if (immediate || doImmediate) _t.immediate = true;
 				
 				if (items) 
 				{
@@ -53,12 +55,16 @@ package sparkflare.layouts
 					
 					for each (row in items) 
 					{
+						// A proxy for the object's values after the 
+						// transition has run.
+						var postTransitionObject:Object = _t.$(row);
 						_t.setValue(row, 'x', x);
 						_t.setValue(row, 'y', 0);
-						x += row.width + gap;
+						x += postTransitionObject.width + gap;
 					}
 				}
-				
+
+				_t.immediate = restoreImmediate;
 				_t = null;
 			}
 		}

@@ -58,6 +58,8 @@ package sparkflare.mappers
 		protected var _palette:IPalette;
 		/** Storage for the scale */		
 		protected var _scale:Scale;
+		/** Storage for a custom encoder function */
+		protected var _customEncoder:Function;
 		
 		
 		/** A scale binding to the source data. */
@@ -98,7 +100,7 @@ package sparkflare.mappers
 			return scale.min;
 		}
 		
-
+		
 		/**
 		 * Set the mapper's scale maximum value
 		 */
@@ -146,6 +148,24 @@ package sparkflare.mappers
 		
 		
 		
+		private var _hideItemsOutOfRange:Boolean = false;
+		
+		/**
+		 * Hide elements that are outside of the scale range 
+		 */
+		public function set hideItemsOutOfRange(v:Object):void {
+			if (_hideItemsOutOfRange != v) {
+				_hideItemsOutOfRange = v;
+				updateMapper();
+			}
+		}
+		
+		public function get hideItemsOutOfRange():Boolean {
+			return _hideItemsOutOfRange;
+		}
+		
+		
+		
 		private var _binCount:int = -1;
 		/**
 		 * Set the encoder's palette length
@@ -162,8 +182,6 @@ package sparkflare.mappers
 		public function get binCount():int {
 			return _binCount;
 		}
-		
-		
 		
 		
 		protected var _requiredState:String;
@@ -197,7 +215,7 @@ package sparkflare.mappers
 				updateMapper();
 			}
 		}
-
+		
 		
 		/** The palette used to map scale values to visual values. */
 		public function get palette():IPalette {
@@ -221,8 +239,8 @@ package sparkflare.mappers
 		{
 			_source = source;
 			_target = target;
-			this.filter = filter;			
-
+			this.filterFn = filter;			
+			
 			this.scale = new LinearScale();
 			this.palette = new SizePalette();
 			if (_binCount != -1) {
@@ -230,114 +248,145 @@ package sparkflare.mappers
 			}
 		}
 		
-        
-        /** @inheritDoc */
-        override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void
-        {
-            if (enabled) {
-                _t = (t != null ? t : Transitioner.DEFAULT);
-                var p:Property = Property.$(_source);
-                
-                var targetProp:Property = Property.$(_target);
-                if (items) {
-                    items.disableAutoUpdate();
-                    for each (var row:Object in items) {
-                        if (row) { 
-                            var oldValue:Object = targetProp.getValue(row);
-							if (p.getValue(row) < sourceMin  || p.getValue(row) > sourceMax) {
-//								_t.setValue(row, 'alpha', 0);
-								row.visible = false;
-							} else {
-//								_t.setValue(row, 'alpha', 1);
-								row.visible = true;
+		
+		/** @inheritDoc */
+		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void
+		{
+			const hideItems:Boolean = hideItemsOutOfRange;
+
+			if (enabled) {
+				_t = (t != null ? t : Transitioner.DEFAULT);
+				var restoreImmediate:Boolean = _t.immediate;
+				if (immediate || doImmediate) _t.immediate = true;
+				
+				_t = (t != null && !immediate ? t : Transitioner.DEFAULT);
+				
+				var p:Property = Property.$(_source);
+				
+				var targetProp:Property = Property.$(_target);
+				if (items) {
+					items.disableAutoUpdate();
+					for each (var row:Object in items) {
+						if (row) { 
+							var oldValue:Object = targetProp.getValue(row);
+							var val:* = p.getValue(row);
+							if (hideItems) {
+								if (val < sourceMin  || val > sourceMax) {
+									_t.setValue(row, 'alpha', 0.01);
+								} else {
+									_t.setValue(row, 'alpha', 1);
+								}
 							}
-                            var newValue:Object = encode(p.getValue(row));
-                            _t.setValue(row, _target, newValue);
-                            items.itemUpdated(row, _target, oldValue, newValue);
-                        }
-                    }
-                    items.enableAutoUpdate();
-                }
-                
-                _t = null;
-            }
-        }
-        
-        /** @inheritDoc */
-        override public function distort(items:ArrayCollection, e:Event, visualElementProperty:String=null):void
-        {
-            if (enabled) {
-                var p:Property = Property.$(_source);
-                var targetProp:Property = Property.$(_target);
-                var pt:Point = new Point();
-                var stagePt:Point;
-                const PI:Number = 3.141592; 
-                
-                if (items) {
-                    for each (var row:Object in items) {
-                        if (row) { 
-                            var rend:ItemRenderer = row as ItemRenderer;
-                            var offsets:TransformOffsets = rend.postLayoutTransformOffsets;
-                            if (offsets == null) {
-                                rend.postLayoutTransformOffsets = new TransformOffsets();
-                                offsets = rend.postLayoutTransformOffsets;
-                            }
-                            
-                            if (e.type == MouseEvent.MOUSE_DOWN) {
-                                offsets.x = 50*Math.random();
-                            }
-                            if (e.type == MouseEvent.MOUSE_UP) {
-                                offsets.x = 0;
-                                offsets.y = 0;
-                                offsets.z = 0;
-                                offsets.scaleX = 1;
-                                offsets.scaleY = 1;
-                            }
-                            if (e.type == MouseEvent.MOUSE_MOVE) {
-                                var me:MouseEvent = e as MouseEvent;
-                                pt.x = 0;
-                                pt.y = 0;
-                                offsets.z = 0;
-                                stagePt = rend.localToGlobal(pt);
-                                
-                                var distX:Number = (stagePt.x - me.stageX);
-                                var distY:Number = (stagePt.y - me.stageY);
-                                
-                                
-                                var dist:Number = Math.sqrt(distX*distX+ distY*distY);
-                                var sign:Number = distX > 0 ? 1 : -1;
-                                if (Math.abs(dist) < 100) {
-                                    dist = PI * dist / 100;
-                                    var amt:Number = 0.5*(Math.cos(dist) + 1);
-                                    offsets.x = amt * distX;
-                                    offsets.y = amt * distY;
-                                    //offsets.z = amt * -10;
-                                    offsets.scaleX = 1+amt;
-                                    offsets.scaleY = 1+amt;
-                                } else {
-                                    offsets.x = 0;
-                                    offsets.y = 0;
-                                    offsets.z = 0;
-                                    offsets.scaleX = 1;
-                                    offsets.scaleY = 1;
-                                }
-                            }
-                            if (e.type == MouseEvent.ROLL_OUT) {
-                                offsets.x = 0;
-                                offsets.y = 0;
-                                offsets.z = 0;
-                                offsets.scaleX = 1;
-                                offsets.scaleY = 1;
-                            }
-//                            var newValue:Object = encode(p.getValue(row));
-//                            targetProp.setValue(offsets, newValue);
-                        }
-                    }
-                }
-                
-                _t = null;
-            }
-        }
+							var newValue:Object = encode(val);
+							_t.setValue(row, _target, newValue);
+							items.itemUpdated(row, _target, oldValue, newValue);
+						}
+					}
+					items.enableAutoUpdate();
+				}
+				
+				_t.immediate = restoreImmediate;
+				_t = null;
+			}
+		}
+		
+		/** @inheritDoc */
+		override public function distort(items:ArrayCollection, e:Event, visualElementProperty:String=null):void
+		{
+			if (enabled) {
+				var p:Property = Property.$(_source);
+				var targetProp:Property = Property.$(_target);
+				var pt:Point = new Point();
+				var stagePt:Point;
+				const PI:Number = 3.141592; 
+				
+				if (items) {
+					for each (var row:Object in items) {
+						if (row) { 
+							var rend:ItemRenderer = row as ItemRenderer;
+							var offsets:TransformOffsets = rend.postLayoutTransformOffsets;
+							if (offsets == null) {
+								rend.postLayoutTransformOffsets = new TransformOffsets();
+								offsets = rend.postLayoutTransformOffsets;
+							}
+							
+							if (e.type == MouseEvent.MOUSE_DOWN) {
+								offsets.x = 50*Math.random();
+							}
+							if (e.type == MouseEvent.MOUSE_UP) {
+								offsets.x = 0;
+								offsets.y = 0;
+								offsets.z = 0;
+								offsets.scaleX = 1;
+								offsets.scaleY = 1;
+							}
+							if (e.type == MouseEvent.MOUSE_MOVE) {
+								var me:MouseEvent = e as MouseEvent;
+								pt.x = 0;
+								pt.y = 0;
+								offsets.z = 0;
+								stagePt = rend.localToGlobal(pt);
+								
+								var distX:Number = (stagePt.x - me.stageX);
+								var distY:Number = (stagePt.y - me.stageY);
+								
+								
+								var dist:Number = Math.sqrt(distX*distX+ distY*distY);
+								var sign:Number = distX > 0 ? 1 : -1;
+								if (Math.abs(dist) < 100) {
+									dist = PI * dist / 100;
+									var amt:Number = 0.5*(Math.cos(dist) + 1);
+									offsets.x = amt * distX;
+									offsets.y = amt * distY;
+									//offsets.z = amt * -10;
+									offsets.scaleX = 1+amt;
+									offsets.scaleY = 1+amt;
+								} else {
+									offsets.x = 0;
+									offsets.y = 0;
+									offsets.z = 0;
+									offsets.scaleX = 1;
+									offsets.scaleY = 1;
+								}
+							}
+							if (e.type == MouseEvent.ROLL_OUT) {
+								offsets.x = 0;
+								offsets.y = 0;
+								offsets.z = 0;
+								offsets.scaleX = 1;
+								offsets.scaleY = 1;
+							}
+							//                            var newValue:Object = encode(p.getValue(row));
+							//                            targetProp.setValue(offsets, newValue);
+						}
+					}
+				}
+				
+				_t = null;
+			}
+		}
+		
+		
+		public function get customEncoder():Function
+		{
+			return _customEncoder;
+		}
+		
+		/**
+		 * A custom function for performing value encodings. If
+		 * set, this overrides the encoder using palette and scale.
+		 * 
+		 * The function signature is:
+		 * 
+		 * <code>
+		 * function(val:Object, mapper:IMapper):*
+		 * </code>
+		 * 
+		 */		
+		public function set customEncoder(f:Function):void 
+		{
+			_customEncoder = f;
+		}
 		
 		
 		/**
@@ -349,7 +398,14 @@ package sparkflare.mappers
 		[Bindable(event="updateMapper")]
 		public function encode(val:Object):*
 		{
-			return palette.getValue(scale.interpolate(val));
+			if (customEncoder) 
+			{
+				return customEncoder(val, this);
+			}
+			else
+			{
+				return palette.getValue(scale.interpolate(val));
+			}
 		}
 		
 	} // end of class Encoder

@@ -26,9 +26,15 @@ package sparkflare.mappers
 		function get name():String;
 		function set name(s:String):void;
 		
-		/** Indicates if the operator is enabled or disabled. */
-		function get enabled():Boolean;
+		/** 
+		 * Indicates if the operator should run through the transitioner
+		 * or apply it's values immediately. 
+		 **/
+		function get immediate():Boolean;
+		function set immediate(v:Boolean):void;
 		
+		/** Indicates if the operator is enabled or disabled. */
+		function get enabled():Boolean;		
 		function set enabled(b:Boolean):void;
 		
 		/**
@@ -42,7 +48,7 @@ package sparkflare.mappers
          * @param t a Transitioner instance for collecting value updates.
          * @param visualElementProperty an optional indicator of where to find the visual element
          */
-        function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void;
+        function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void;
         
         /**
          * Performs an distortion over the contents of a DataGroup. The distortion is parameterized

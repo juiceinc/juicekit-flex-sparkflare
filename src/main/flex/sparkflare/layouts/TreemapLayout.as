@@ -23,12 +23,12 @@ package sparkflare.layouts
 	[Bindable]
 	public class TreemapLayout extends MapperBase
 	{
-
+		
 		/**
 		 * Storage for the property used to calculate treemap node size.
 		 */
 		protected var sizeProp:Property = Property.$("size");
-				
+		
 		protected var _t:Transitioner = Transitioner.DEFAULT;
 		
 		/** Storage for getWorstPersistent calculations */
@@ -99,7 +99,7 @@ package sparkflare.layouts
 					// TODO: set size to zero?
 					continue;
 				}
-
+				
 				workingRow.push(item);
 				
 				// CG: determine whether to keep popping items
@@ -211,17 +211,20 @@ package sparkflare.layouts
 			}
 			return r;
 		}
-				
+		
 		
 		/** @inheritDoc */
-		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void
+		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void
 		{
 			var row:Object;
 			var v:Number;
 			
 			if (enabled) 
 			{
-				_t = (t != null ? t : Transitioner.DEFAULT);
+				var _t:Transitioner = (t != null ? t : Transitioner.DEFAULT);
+				var restoreImmediate:Boolean = _t.immediate;
+				if (immediate || doImmediate) _t.immediate = true;
+				
 				var sizeProp:Property = Property.$(sizeField);
 				
 				if (items && items.length > 0) 
@@ -232,17 +235,17 @@ package sparkflare.layouts
 						visualElementProp = Property.$(visualElementProperty)
 					if (visualElementProp) {
 						typicalItem = visualElementProp.getValue(typicalItem);
-                        trace('\tlayout',typicalItem.owner.width, typicalItem.owner.height);
 					}
 					var r:Rectangle = new Rectangle(0, 0, typicalItem.owner.width, typicalItem.owner.height);
 					var w:Number = Math.min(r.width, r.height);
 					squarify(items.source.slice(), _row, w, r, visualElementProperty); 					
 				}
 				
+				_t.immediate = restoreImmediate;
 				_t = null;
 			}
 		}
-				
+		
 		
 		/**
 		 * Constructor

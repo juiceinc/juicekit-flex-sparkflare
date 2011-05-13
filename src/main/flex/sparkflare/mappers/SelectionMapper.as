@@ -45,7 +45,7 @@ package sparkflare.mappers
 		
 		
 		/** @inheritDoc */
-		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void
+		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void
 		{
 			if (enabled) {
 				if (items) {
@@ -59,9 +59,5 @@ package sparkflare.mappers
 			}
 		}
 		
-		
-		
-		
-		
-	} // end of class Encoder
+	}
 }

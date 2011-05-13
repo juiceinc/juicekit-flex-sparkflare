@@ -30,16 +30,16 @@ package sparkflare.mappers
 		 * The IMapper to evaluate when <code>operate</code> is called.
 		 */
 		public var selectedIndex:int = 0;
-
+		
 		
 		/**
 		 * Performs an operation over the contents of a visualization.
 		 * @param t a Transitioner instance for collecting value updates.
 		 */
-		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void {
+		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void {
 			if (enabled) {
 				if (selectedItem) {
-					selectedItem.operate(items, t, visualElementProperty);	
+					selectedItem.operate(items, t, visualElementProperty, doImmediate || immediate);	
 				}
 			}
 		}

@@ -36,11 +36,11 @@ package sparkflare.mappers
 		 *  for which this function return true will be considered by the
 		 *  labeler. If the function is null, all items will be considered.
 		 *  @see flare.util.Filter */
-		public function get filter():Function {
+		public function get filterFn():Function {
 			return _filter;
 		}
 		
-		public function set filter(f:*):void {
+		public function set filterFn(f:*):void {
 			_filter = Filter.$(f);
 			updateMapper();
 		}
@@ -57,7 +57,6 @@ package sparkflare.mappers
 		
 		private var _enabled:Boolean = true;
 		
-		
 		/** Indicates if the mapper is enabled or disabled. */
 		public function get enabled():Boolean {
 			return _enabled;
@@ -65,6 +64,17 @@ package sparkflare.mappers
 		
 		public function set enabled(b:Boolean):void {
 			_enabled = b;
+		}
+		
+		private var _immediate:Boolean = false;
+		
+		/** Indicates if the mapper is applied immediately. */
+		public function get immediate():Boolean {
+			return _immediate;
+		}
+		
+		public function set immediate(b:Boolean):void {
+			_immediate = b;
 		}
 		
 		/** @inheritDoc */
@@ -87,7 +97,7 @@ package sparkflare.mappers
          * @param t a Transitioner instance for collecting value updates.
          * @param visualElementProperty an optional indicator of where to find the visual element
          */
-        public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void {
+        public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void {
             // for sub-classes to implement
         }
         

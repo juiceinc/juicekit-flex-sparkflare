@@ -32,16 +32,17 @@ package sparkflare.layouts
 		public var sortBy:Array = null;
 		
 		/** @inheritDoc */
-		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void
+		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void
 		{
 			var row:Object;
-			var _t:Transitioner;
 			var v:Number;
 			var isNewItem:Boolean;
 			
 			if (enabled) 
 			{
-				_t = (t != null ? t : Transitioner.DEFAULT);                
+				var _t:Transitioner = (t != null ? t : Transitioner.DEFAULT);
+				var restoreImmediate:Boolean = _t.immediate;
+				if (immediate || doImmediate) _t.immediate = true;
 				
 				if (items) 
 				{
@@ -69,11 +70,14 @@ package sparkflare.layouts
 							_t.setValue(row, 'x', 0);
 						}
 						
-						var afterTransitionRow:Object = _t.$(row);
-						y += afterTransitionRow.height + gap;
+						// A proxy for the object's values after the 
+						// transition has run.
+						var postTransitionObject:Object = _t.$(row);
+						y += postTransitionObject.height + gap;
 					}
 				}
 				
+				_t.immediate = restoreImmediate;
 				_t = null;
 			}
 		}

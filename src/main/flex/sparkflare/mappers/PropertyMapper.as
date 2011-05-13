@@ -32,22 +32,22 @@
 
 package sparkflare.mappers
 {  
-    import mx.collections.ArrayCollection;
-    import mx.utils.ObjectProxy;
-    
-    import org.juicekit.animate.Transitioner;
-    import org.juicekit.util.Property;
-    
-    /**
-     * Applies the properties in <code>targetValues</code> to
-     * each mappable item.
-     */
-    [Bindable]
-    public class PropertyMapper extends MapperBase
-    {
+	import mx.collections.ArrayCollection;
+	import mx.utils.ObjectProxy;
+	
+	import org.juicekit.animate.Transitioner;
+	import org.juicekit.util.Property;
+	
+	/**
+	 * Applies the properties in <code>targetValues</code> to
+	 * each mappable item.
+	 */
+	[Bindable]
+	public class PropertyMapper extends MapperBase
+	{
 		protected var _values:Object = {};
 		protected var _defaultValues:Object = {};
-        
+		
 		/**
 		 * Set exact values. 
 		 */
@@ -58,7 +58,7 @@ package sparkflare.mappers
 		public function get targetValues():Object {
 			return _values;
 		}
-
+		
 		/**
 		 * Set default values. 
 		 */
@@ -69,13 +69,16 @@ package sparkflare.mappers
 		public function get defaultValues():Object {
 			return _defaultValues;
 		}
-        
-        
-        /** @inheritDoc */
-        override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void
-        {
-            if (enabled && targetValues) {
-                var _t:Transitioner = (t != null ? t : Transitioner.DEFAULT);
+		
+		
+		/** @inheritDoc */
+		override public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void
+		{
+			if (enabled && targetValues) {
+				var _t:Transitioner = (t != null ? t : Transitioner.DEFAULT);
+				var restoreImmediate:Boolean = _t.immediate;
+				if (immediate || doImmediate) _t.immediate = true;
+				
 				if (items) {
 					var targetProps:Array = [];
 					var defaultProps:Array = [];
@@ -87,15 +90,15 @@ package sparkflare.mappers
 						var defaultProp:Property = Property.$(_def);
 						defaultProps.push(defaultProp);
 					}
-
-//					items.disableAutoUpdate();
+					
+					//					items.disableAutoUpdate();
 					for each (var row:Object in items) {
-						if (filter == null || filter(row)) {
+						if (filterFn == null || filterFn(row)) {
 							for each (var prop:Property in targetProps) {
 								var newValue:Object = targetValues[prop.name];
 								var oldValue:Object = targetProp.getValue(row);
 								_t.setValue(row, prop.name, newValue);
-//								items.itemUpdated(row, prop.name, oldValue, newValue); 
+								//								items.itemUpdated(row, prop.name, oldValue, newValue); 
 							}
 						} else {
 							if (defaultProps.length > 0) {
@@ -103,21 +106,18 @@ package sparkflare.mappers
 									newValue = defaultValues[prop.name];
 									oldValue = defaultProp.getValue(row);
 									_t.setValue(row, prop.name, newValue);
-//									items.itemUpdated(row, prop.name, oldValue, newValue); 
+									//									items.itemUpdated(row, prop.name, oldValue, newValue); 
 								}
 							}
 						}
 					}
-//					items.enableAutoUpdate();
+					//					items.enableAutoUpdate();
 				}					
-                
-                _t = null;
-            }
-        }
-        
-        
-        
-        
-        
-    } // end of class Encoder
+				
+				_t.immediate = restoreImmediate;
+				_t = null;
+			}
+		}
+		
+	} 
 }

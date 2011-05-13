@@ -37,6 +37,17 @@ package sparkflare.mappers
 		}
 		
 		
+		private var _immediate:Boolean = false;
+		
+		/** Indicates if the mapper is applied immediately. */
+		public function get immediate():Boolean {
+			return _immediate;
+		}
+		
+		public function set immediate(b:Boolean):void {
+			_immediate = b;
+		}
+				
 		private var _enabled:Boolean = true;
 		
 		
@@ -56,31 +67,31 @@ package sparkflare.mappers
 			MapperBase.applyParameters(this, params);
 		}
 		
-        
-        /**
-         * Performs an operation over the contents of a visualization.
-         * @param t a Transitioner instance for collecting value updates.
-         */
-        public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null):void {
-            if (enabled) {
-                for each (var op:IMapper in this.source) {
-                    op.operate(items, t, visualElementProperty);
-                }				
-            }
-        }
-        
-        
-        /**
-         * Performs an distortion over the contents of a visualization.
-         */
-        public function distort(items:ArrayCollection, e:Event, visualElementProperty:String=null):void {
-            if (enabled) {
-                for each (var op:IMapper in this.source) {
-                    op.distort(items, e);
-                }				
-            }
-        }
-        
+		
+		/**
+		 * Performs an operation over the contents of a visualization.
+		 * @param t a Transitioner instance for collecting value updates.
+		 */
+		public function operate(items:ArrayCollection, t:Transitioner = null, visualElementProperty:String=null, doImmediate:Boolean=false):void {
+			if (enabled) {
+				for each (var op:IMapper in this.source) {					
+					op.operate(items, t, visualElementProperty, doImmediate || immediate);
+				}				
+			}
+		}
+		
+		
+		/**
+		 * Performs an distortion over the contents of a visualization.
+		 */
+		public function distort(items:ArrayCollection, e:Event, visualElementProperty:String=null):void {
+			if (enabled) {
+				for each (var op:IMapper in this.source) {
+					op.distort(items, e);
+				}				
+			}
+		}
+		
 		
 		/**
 		 * Updates the encoder after a change to encoding parameters
