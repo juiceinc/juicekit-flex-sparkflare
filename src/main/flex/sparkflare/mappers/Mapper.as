@@ -258,23 +258,25 @@ package sparkflare.mappers
 				_t = (t != null ? t : Transitioner.DEFAULT);
 				var restoreImmediate:Boolean = _t.immediate;
 				if (immediate || doImmediate) _t.immediate = true;
-				
-				_t = (t != null && !immediate ? t : Transitioner.DEFAULT);
-				
-				var p:Property = Property.$(_source);
-				
+								
+				var srcProp:Property = Property.$(_source);				
 				var targetProp:Property = Property.$(_target);
-				if (items) {
+				
+				if (items && targetProp && srcProp) {
 					items.disableAutoUpdate();
 					for each (var row:Object in items) {
 						if (row) { 
 							var oldValue:Object = targetProp.getValue(row);
-							var val:* = p.getValue(row);
+							var val:* = srcProp.getValue(row);
 							if (hideItems) {
-								if (val < sourceMin  || val > sourceMax) {
-									_t.setValue(row, 'alpha', 0.01);
+								if (val < sourceMin || val > sourceMax) {
+									row['visible'] = false;
+//									row['alpha'] = 0.01;
+//									_t.setValue(row, 'alpha', 0.2);
 								} else {
-									_t.setValue(row, 'alpha', 1);
+									row['visible'] = true;
+//									row['alpha'] = 1;
+//									_t.setValue(row, 'alpha', 0.99);
 								}
 							}
 							var newValue:Object = encode(val);
@@ -398,7 +400,7 @@ package sparkflare.mappers
 		[Bindable(event="updateMapper")]
 		public function encode(val:Object):*
 		{
-			if (customEncoder) 
+			if (customEncoder != null) 
 			{
 				return customEncoder(val, this);
 			}
