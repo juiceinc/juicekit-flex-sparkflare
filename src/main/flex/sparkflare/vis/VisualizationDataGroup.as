@@ -26,6 +26,9 @@ package sparkflare.vis
 	import sparkflare.mappers.MapperBase;
 	import sparkflare.mappers.MapperChain;
 	
+	
+	[Event(name="end",    type="org.juicekit.animate.TransitionEvent")]
+	
 	[DefaultProperty("mappers")] 
 	
 	/**
@@ -40,6 +43,8 @@ package sparkflare.vis
 		private var _distortions:MapperChain;		
 		/** Storage for the transition's transitionPeriod in seconds */
 		private var _transitionPeriod:Number = 1.5;
+		/** Storage for the transition's transitionDelay in seconds */
+		private var _transitionDelay:Number = 0;
 		
 		
 		/**
@@ -61,6 +66,22 @@ package sparkflare.vis
 		{
 			transitioner.duration = value;
 			_transitionPeriod = value;
+		}
+
+		
+		/**
+		 * The delay before the transition starts in seconds.
+		 */
+		public function get transitionDelay():Number
+		{
+			return _transitionDelay;
+		}
+		
+		
+		public function set transitionDelay(value:Number):void
+		{
+			transitioner.delay = value;
+			_transitionDelay = value;
 		}
 		
 		/**
@@ -178,11 +199,10 @@ package sparkflare.vis
 				{
 					transitioner.stop();
 					transitioner.dispose();
-//					transitioner.reset();
 					transitioner = null;					
 				}
-//				if (!transitioner)
-					transitioner = new Transitioner(transitionPeriod, null);
+				transitioner = new Transitioner(transitionPeriod, null);
+				transitioner.delay = transitionDelay;
 				transitioner.optimize = true;
 				t = transitioner;
 			}

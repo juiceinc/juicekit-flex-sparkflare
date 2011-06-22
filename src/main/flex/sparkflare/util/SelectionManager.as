@@ -60,10 +60,9 @@ package sparkflare.util
 		// dataGroup
 		//-----------------------------
 		
-		[Bindable] public var _dataGroup:DataGroup;
+		[Bindable] public var _dataGroups:Array = [];
 		
-
-		public function set dataGroup(v:DataGroup):void 
+		protected function unwireDataGroup(_dataGroup:DataGroup):void 
 		{
 			var len:int;
 			var i:int;
@@ -81,11 +80,16 @@ package sparkflare.util
 					if (rend)
 						rend.removeEventListener(MouseEvent.CLICK, itemClicked);
 				}
-			
+				
 			}
+		}
 			
-			_dataGroup = v;
-
+		protected function wireDataGroup(_dataGroup:DataGroup):void 
+		{
+			var len:int;
+			var i:int;
+			var rend:IItemRenderer;
+			
 			// Add handlers to new group
 			if (_dataGroup)
 			{
@@ -106,12 +110,48 @@ package sparkflare.util
 			}
 			
 			selectionInit();
+			
+		}
+		
+		public function addDataGroup(v:DataGroup):void 
+		{
+			wireDataGroup(v);
+			_dataGroups.push(v);
+		}
+		
+		
+		public function removeDataGroup(v:DataGroup):void 
+		{
+			var idx:int = _dataGroups.indexOf(v);
+			
+			if (idx != -1)
+			{
+				_dataGroups.splice(idx, 1);				
+				unwireDataGroup(v);
+			}
+		}
+
+		public function set dataGroup(v:DataGroup):void 
+		{
+			while (_dataGroups.length > 0) 
+			{				
+				var _dataGroup:DataGroup = _dataGroups.pop();
+				removeDataGroup(_dataGroup);
+			}
+				
+			if (v)
+			{
+				wireDataGroup(v);
+				_dataGroups.push(v);				
+			}
+						
+			selectionInit();
 		}
 		
 		
 		public function get dataGroup():DataGroup
 		{
-			return _dataGroup;
+			return _dataGroups && _dataGroups.length > 0 ? _dataGroups[0] as DataGroup : null;
 		}
 		
 		
