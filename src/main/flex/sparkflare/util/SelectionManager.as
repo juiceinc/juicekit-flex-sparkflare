@@ -42,7 +42,7 @@ package sparkflare.util
 		public static const SELECT_MANY:String = 'selectMany';
 		/** Select multiple elements at a time starting with zero elements selected 
 		 * allow all elements to be selected*/
-		public static const SELECT_MANY_ALLOW_ALL:String = 'selectManyAllowAll';
+		public static const SELECT_MANY_CLEAR_ON_ALL:String = 'selectManyClearOnAll';
 		/** Select multiple elements at a time starting with all elements selected */
 		public static const SELECT_MANY_DEFAULT_SELECTED:String = 'selectManyDefaultSelected';
 		
@@ -164,7 +164,7 @@ package sparkflare.util
 		
 		private var _selectionMode:String = SelectionManager.SELECT_ONE;
 
-		[Inspectable(name="selectionMode",type="String",category="General",enumeration="selectOne,selectMany,selectManyAllowAll,selectManyDefaultSelected",default="selectOne")]
+		[Inspectable(name="selectionMode",type="String",category="General",enumeration="selectOne,selectMany,selectManyClearOnAll,selectManyDefaultSelected",default="selectOne")]
 		public function set selectionMode(v:String):void 
 		{
 			if (_selectionMode != v) 
@@ -312,7 +312,7 @@ package sparkflare.util
 				{
 					lookupSelectNone();
 				}
-				else if (selectionMode == SelectionManager.SELECT_MANY_ALLOW_ALL)
+				else if (selectionMode == SelectionManager.SELECT_MANY_CLEAR_ON_ALL)
 				{
 					lookupSelectNone();
 				}
@@ -369,7 +369,7 @@ package sparkflare.util
 				
 			// Select multiple items but when all items are selected
 			// clear the selected items
-			else if (selectionMode == SelectionManager.SELECT_MANY)
+			else if (selectionMode == SelectionManager.SELECT_MANY_CLEAR_ON_ALL)
 			{
 				if (selectedLookup[getValue(data)] === undefined) 
 					lookupSelect(data);
@@ -381,7 +381,7 @@ package sparkflare.util
 			}
 			
 			// Select multiple items 
-			else if (selectionMode == SelectionManager.SELECT_MANY_ALLOW_ALL)
+			else if (selectionMode == SelectionManager.SELECT_MANY)
 			{
 				if (selectedLookup[getValue(data)] === undefined) 
 					lookupSelect(data);
