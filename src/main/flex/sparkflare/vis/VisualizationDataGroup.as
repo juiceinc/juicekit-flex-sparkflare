@@ -231,6 +231,7 @@ package sparkflare.vis
 			{
 				mappers.operate(elements, transitioner);
 				// Play the new values.
+				trace("playing transitioner");
 				transitioner.play();
 			}
 			runningDataUpdateTransition = false;
